@@ -1,0 +1,246 @@
+Requirements:
+PHP 5.3 is required for unit testing plugin
+APC or memcache(-d) is optional, but highly recommended.
+http://pecl.php.net/yaml is also recommended
+
+Project setup:
+Run either 'loader.php' or compiled framework .php file via terminal (php loader.php) to see all options.
+$ php loader.php create-project /www/projects/new_project.
+
+Normal framework flow:
+Framework first reads config/global.yml file, then parses routing at config/routing.yml, executes controller action specified in the matched route and finally displays views/template/_layout.php
+config > routing > controller > view
+
+Set up routing by specifying routes following the syntax examples of provided ones.
+Each route should have at least a controller specified. If you want the route to execute a method of a controller object, specify an 'action' too. You can specify multiple actions as an array (e.g. action: [foo, bar]). If no action is specified, only controller object constructor will be executed.
+Routes support variables in domains and paths. If you define your route as:
+'@subdomain.example.com':
+  GET /read/@article: { controller: read, foo: bar }
+Routing framework will save values of 'subdomain', 'article' and 'foo'.
+These variables can be accessed at any time via X::get ( 'route', 'variable' );
+E.g. in this case X::get ( 'route', 'foo' ) would result in 'bar'.
+
+Routes can have internal names to simplify route management. For example if route is specified as:
+/test/url*/@arg1/@arg2/*/text: { route_name: test, controller: index }
+the framework will allow the generation of an appropriate URL by refering to the route as '%test'.
+For example (from a view):
+<?= url ( '%test', array ( 'arg2' => 'bar', 'arg1' => 'foo', null, 123 ), '?get=asd' ); ?>
+This will result in:
+/test/url/foo/bar/123/text.html?get=asd
+Routing framework can also automatically handle XSRF protection validation. Specify 'xsrf: true' in route config and the framework will automatically look for '__token' request variable with the correct value for that route.
+For named routes, XSRF token will be added automatically if 'xsrf: true' is present.
+Otherwise, you may instruct framework to add the appropriate GET variable:
+<?= url ( 'path', '?_xsrf' ); ?> will result in /path?__token=xsrf_token
+If automatic XSRF check fails, default route's controller will be executed, with action of 'HTTP_403'
+
+Framework sets a number of variables in its variable namespace during execution. You can access them via X::get ( 'variable' ).
+Some variables may be arrays. You can access any sub-element like so: X::get ( 'config', 'session', 'domain' ). To set a variable use X::set ( 'config', 'session', 'domain', 'new_value' ). To check if variable is set, use X::is_set ( 'variable' ). To get a reference to a framework variable for easier manipulation, use X::get_reference():
+X::set ( 'foo', 'bar' );
+echo X::get ( 'foo' ); // bar
+$variable = & X::get_reference ( 'foo' );
+$variable = 'baz';
+echo X::get ( 'foo' ); // baz
+X::un_set() can be used to unset variables
+
+By default the following variables are reserved by the framework:
+[env] - Current environment name (see global.yml)
+[config] - Contents of global.yml as an array
+[route] - Contains route variables aswell as other info about current route
+[controller] - Current controller object
+[framework] - Variables used by framework components or plugins
+
+To dump all set framework variables at any given time, use "throw new error ( X::get() );"
+(The error handler automatically uses print_r() PHP function to print arrays)
+
+To assign a variable from a controller, set it as a local controller property.
+E.g.
+class index_controller extends controller_base
+{
+	public function some_action ()
+	{
+		$this -> foo = 'bar';
+		$this -> bar = 'baz';
+	}
+}
+This is exactly the same as X::set ( 'foo', 'bar' ) and X::set ( 'bar', 'baz' );
+
+To access a model method from within a controller, use local 'model' property. Like so:
+$this -> articles = $this -> model -> blog -> get_articles ();
+The framework will then automatically load 'models/blog_model.php' and execute 'get_articles()' method.
+If you need to access a model not from a controller (say, in tests), use X::model():
+$articles = X::model ( 'blog' ) -> get_articles ();
+
+Sometimes you may need to access a method of a different controller. That is supported via X::controller() method.
+$data = X::controller ( 'post' ) -> show_posts ();
+
+Framework also supports a special 'null' controller. It has methods that are executed pre- and post- execution of a routed controller. It can be useful if you want to set some variables no matter what controller gets executed. For example you might want to implement user login checks using it.
+To use it, create a file in controllers directory: 'controllers/_controller.php':
+class _controller extends controller_base
+{
+    public function pre ()
+    {
+    }
+    public function post ()
+    {
+    }
+}
+Flesh out 'pre' and 'post' methods the way you want.
+
+Before the execution of a view all the variables from framework namespace are brought into global PHP namespace.
+This means that if you set a variable via X::set ( 'foo', 'bar' ) before, you can access it in your view using $foo.
+Special '$model' object is also created so that you can access models via it easily:
+$model -> blog -> get_articles ();
+Views are executed as a simple .php code, however framework provides a couple of shortcuts to speed up the development.
+<? php_code(); ?> will be expanded into <?php php_code(); ?> (PHP short_open_tag doesn't have to be enabled!)
+<?='string'?> will be expanded into <?php echo 'string'?>
+<?php component ( 'hello' ) ?> will include views/template/hello_view.php into the view (don't include views directly as they need to be pre-compiled first. component() does that.).
+<?=url('hello','world')?> will result in http://example.com/hello/world.html (URL is generated according to routing settings in routing.yml. Session ID might be attached to the URL, depending on your session settings in global.yml). You can attach a HTTP GET query to URL like so: <?=url('hello','world','?foo=bar&baz=lipsum')?>
+<?=translate('key')?> or <'key'> can be used to return a localized translation of a string, identified by 'key'. You can pass as many arguments to these functions as are needed to be replaced in the localized string. Also, since <'key'> is a shortcut to <?=translate('key')?> you can use PHP code in it too:
+<'key', $argument1, rand(1,10)'>
+
+By default framework will display 'views/template/_layout.php' view. Usually that is enough as you can define your webpage layout in there and use '<?php component($controller)?>' or similar code to include content and menus. However you can always override it using X_view::set ( 'name' ); This will display 'views/template/name_view.php'. You can also disable view completely: X_view::set ( false );
+If request comes in via AJAX, by default '_ajax.php' file will be executed (if it exists in the template directory) instead of '_layout.php'. Also, VIA_AJAX constant will be set to true.
+
+To set a different template use X_view::template ( 'template_name' ); To retrieve current template name use $template = X_view::template ();
+
+Framework has an inbuilt error handling mechanism that handles all PHP errors and exceptions. You can trigger it using 'throw new error ( "message" );'. If a file named '_error.php' exists in the current template directory, user-friendly (non-fatal) error messages can be generated using 'throw new error ( "message", E_USER_ERROR );'. This will load _error.php and pass $e object, which contains information about the exception. To get the error message, use '$e -> getMessage ();', etc.
+
+Framework supports internal rerouting:
+X::reroute ( '/url' );
+X::reroute ( X_routing::url ( 'guestbook' ) );
+X::reroute ( X_routing::url ( 'guestbook' ), 'POST', 'framework.dev' );
+Note that rerouting does not halt script execution - new route will be matched and controller will be executed, however the script will continue running normally. To stop current controller after rerouting use return:
+X::reroute ( '/some/url' ); return;
+
+You can also do HTTP redirects:
+X::redirect ( 'http://google.com' );
+This will automatically halt the script.
+
+To create new models and controllers for a framework use the provided CLI interface in the project folder. Run this to see all available options:
+$ ./cli
+or
+$ php bootstrap.php
+To generate a new controller:
+$ ./cli controller example
+This will create 'controllers/example_controller.php' with basic controller contents.
+To generate a new model:
+$ ./cli model example
+This will create 'models/example_model.php'
+You can create those files by hand too, it is not necessary to use CLI.
+
+XtFramework has an inbuilt caching mechanism. Configure it in global.yml and use it like so:
+<?php
+// Get cached value
+$cached = X_cache::get ( 'random' );
+if ( !$cached )
+{
+	// Cache expired or does not exist
+	// Set cache timeout in seconds. 0 = does not expire.
+	$timeout = 5;
+	// Generate a new value and save it
+	X_cache::set ( 'random', md5 ( time () ), $timeout );
+}
+// Return cached value
+echo $cached;
+?>
+There's also X_cache::delete ( 'key' ) method that can be used to remove keys from cache.
+
+Sessions are very easy to use with XtFramework. After you have configured session handling in global.yml:
+<?php
+// Create a new session object in 'hits' namespace
+// This is equivalent of accessing session variables as $_SESSION [ 'hits' ] [ 'variable' ];
+// This way you do not have to worry about overwriting a session variable set from elsewhere.
+// If you don't want to use namespaces, do not pass any argument to the constructor ($hits = new session());
+$hits = new session ( 'hits' );
+if ( !isset ( $hits -> counter ) )
+	$hits -> counter = 1;
+	else
+	$hits -> counter++;
+echo 'This page was accessed '. $hits -> counter .' times';
+?>
+
+Session handler is a plugin, which is autoloaded (also called lazy-loading) by the framework.
+Autoloader loads four types of class names:
+X_* - those are framework libraries, autoloaded from framework/libraries/ directory (unless using a compiled, self-contained version of the framework, of course).
+Zend_* - those are Zend Framework components. Copy 'Zend' directory to plugins/ (plugins/Zend/...) and you will be able to use Zend components using examples straight from the ZF manual. No additional setup needed.
+Doctrine_* - loads doctrine classes from plugins/doctrine/Doctrine/*
+Anything else - When you're loading a new plugin, via, say "$object = new foobar()" autoloader will try to load "plugins/foobar.php" and if that fails, "plugins/foobar/foobar.php".
+Important thing to note is that 'plugins' directory can exist in two places: one relative to the framework directory, another relative to the project dir. Autoloader will prioritize plugins in "FRAMEWORK_DIR/plugins/" and will look into "PROJECT_DIR/plugins/" if unsuccessful.
+
+X_locale provides access to locale-related functions. At the moment only "key => phrase" translation is supported.
+It implements the following public methods:
+X_locale::init ( [$locale = null] )
+X_locale::translate ( $key );
+You can call X_locale::translate ( $key ) right away, the locale will be auto-initialized.
+However if you want to set user locale yourself (otherwise it's autodetected via GeoIP or browser headers), you can do so: X_locale::init ( 'lt_LT' );
+X_locale::translate ( $key ) takes as many arguments as needed. Say you are using 'en_US' locale. Framework will load the dictionary from locales/en_US.php. It might contain a key like this:
+'hi' => 'Hello, {a:1}! {a:2} to meet you.',
+{a:N} are arguments, replaced by the translate method.
+echo X_locale::translate ( 'hi', 'world', 'Nice' ); // Hello, world! Nice to meet you.
+If specified locale does not exist, the framework will default to the one configured in global.yml. If non-default locale is used and the key does not exist in it's dictionary, the framework will try to look it up in the default locale's dictionary and if that fails, will return the name of the key.
+
+Validation sub-framework allows a very easy validation of HTTP forms.
+First off, define your forms in config/validation.yml. Use an example and comments to aid you.
+Couple of important things to know: method can be GET, POST, PUT and DELETE. Form helper will simulate PUT and DELETE within the framework by setting a hidden '__method' variable with either 'PUT' or 'DELETE' as a value and pass it via POST.
+<?=X_validation::form_helper( 'PUT' )?>
+this might output HTML similar to this: <input type="hidden" name="__method" value="PUT" /><input type="hidden" name="__token" value="xsrftoken" />
+Form validation can be done like so:
+if ( X_validation::validate ( 'guestbook', $errors ) )
+{
+    // Success
+}
+else
+{
+    // Failure
+    print_r ( $errors );
+}
+$errors argument is optional and will contain a list of field names that failed to validate and validator names that had failed:
+[_xsrf] = false // If set, it means that XSRF validation failed. If XSRF fails, no other validations take place.
+[_method] = false // Submitted via a method not allowed in the config. If fails, no other validations take place.
+[author] => array ( 'notnull', 'name' ) // Those are validator names that the field value failed validation against
+[message]   =>  array ( '_undefined_field' ) // '_undefined_field' is a special framework validator indicating that the field wasn't passed in the request (null field value doesn't trigger this)
+
+Framework also provides a very simple unit testing functionality. It is heavily inspired by Symfony's Lime testing framework, but trimmed down even more, to bare basics. However that doesn't mean it's not functional! To find out more about the creation of test files see 'tests/unit/sample_test.php' that should have been generated when you created the project (it is also available in framework's 'skeleton' dir if you're not using the compiled .php file). To actually run the test use CLI:
+$ ./cli.sh test
+ ! sample:      Passed 13/14 (skipped 1)
+$ ./cli.sh test sample
+ # hello world
+ > 1 PASS:      the equal operator ignores type
+ > 2 PASS:      a string is converted to a number for comparison
+ > 3 PASS:      zero and one are not equal
+ > 4 PASS:      test01 follows the test numbering pattern
+ > 5 PASS:      tests01 does not follow the pattern
+ > 6 PASS:      one is inferior to two
+ > 7 PASS:      one and true are not identical
+ > 8 PASS:      'foobar' is a string
+ > 9 PASS:      new creates object of the right class
+ > 10 PASS:     objects of class myObject do have a myMethod method
+ > 11 PASS:     exception caught successfully
+ # SKIP 1:      skipping one test to keep the test count exact in the condition
+ ! 13 FAIL:     this test always fails
+ # TODO:        one test left to do
+
+Framework has a pretty basic support for Doctrine ORM.
+First off, define your database in config/global.yml
+database:
+    test_db:
+        dsn: 'mysql://user:pass@localhost/blog'
+You can then either generate schema and doctrine models from an existing database structure (make sure 'db' folder in your project's directory is write-able):
+./cli doctrine_from_db test_db
+Or you can set up your schema in db/test_db.yml and create database and models from that:
+./cli doctrine_from_yaml test_db
+Models are created in models/doctrine/test_db/ folder
+To load fixtures (test data), create db/fixtures/test_db/ folder and add fixture files to it in .yml format:
+./cli doctrine_load_fixtures test_db
+Then load xt_doctrine_connection plugin to initialize Doctrine and start a new connection (say, in your existing model):
+$connection = new xt_doctrine_connection ( 'test_db' );
+Plugin automatically preconfigures Doctrine with settings that should suit most developers and projects, however you can omit the autoconfiguration by passing a second argument:
+new xt_doctrine_connection ( 'test_db', false );
+All doctrine models are prefixed by database connection name defined in global.yml. So in this case:
+$q = Doctrine_Query::create ()
+        -> from ( 'test_db_Post p' )
+        -> leftJoin ( 'p.Author' )
+        -> leftJoin ( 'p.Tags t' )
+        -> orderBy ( 'created_at DESC' );
+$user = new ( 'test_db_User );
+$user -> name = 'Povilas';

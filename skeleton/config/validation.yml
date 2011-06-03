@@ -1,0 +1,45 @@
+# Leave null to disable.
+# Otherwise, change the value into something random and unique to your application.
+# Output it using echo X_validation::form_helper();
+xsrf_protection: changeme_plz
+
+
+forms:
+  guestbook:
+    # Define an array to allow multiple method submissions [ GET, POST, PUT, DELETE ]
+    method: POST
+    # Remove any undefined fields from request
+    remove_undefined: true
+    fields:
+      author: [ notnull, name ]
+      message: notnull
+      submit:
+  sessions:
+    method: PUT
+    remove_undefined: true
+    fields:
+      key: notnull
+      value: notnull
+      submit:
+
+
+# Bunch of validator templates. Feel free to create your own.
+validators:
+  name:
+    length: 2-150
+    regex: /^[a-zA-Z0-9. ]+$/
+  notnull:
+    length: 1
+  email:
+    # Regex by James Watts and Francisco Jose Martin Moreno
+    regex: /^([\w\!\#$\%\&\'\*\+\-\/\=\?\^\`{\|\}\~]+\.)*[\w\!\#$\%\&\'\*\+\-\/\=\?\^\`{\|\}\~]+@((((([a-z0-9]{1}[a-z0-9\-]{0,62}[a-z0-9]{1})|[a-z])\.)+[a-z]{2,6})|(\d{1,3}\.){3}\d{1,3}(\:\d{1,5})?)$/i
+  url:
+    regex: /^http(s)?:\/\/[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i
+
+
+# Default helper element widgets
+widgets:
+  hidden: <input type="hidden" name="@name" value="@value" />
+  # Template-specific widgets
+  wml:
+    hidden: <postfield name="@name" value="@value" />

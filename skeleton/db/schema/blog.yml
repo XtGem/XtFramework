@@ -1,0 +1,35 @@
+Post:
+  tableName: posts
+  actAs: [Timestampable]
+  columns:
+    title: string(255)
+    content: string
+    author_id: integer
+  relations:
+    Tags:
+      class: Tag
+      local: post_id
+      foreign: tag_id
+      refClass: PostTag
+      foreignAlias: Posts
+    Author:
+      foreignType: one
+
+Tag:
+  tableName: tags
+  columns:
+    title: string(255)
+
+PostTag:
+  columns:
+    post_id:
+      type: integer
+      primary: true
+    tag_id:
+      type: integer
+      primary: true
+
+Author:
+  columns:
+    username: string(255)
+    email: string(255)

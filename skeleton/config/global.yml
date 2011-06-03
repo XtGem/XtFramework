@@ -1,0 +1,140 @@
+error_reporting: E_ERROR
+verbose_errors: false
+log_errors: true
+timezone: GMT
+
+view:
+  # Default template to be executed
+  template: web
+
+# Reorder to prioritize different cache backends
+cache:
+  # Alternative PHP cache
+  apc:
+    namespace: XtFramework_
+  # Xcache
+  xcache:
+    namespace: XtFramework_
+  # Memcached (needs libmemcached)
+  memcached:
+    # Multiple servers can be specified like so - this works for memcache cache and memcache/memcached session backends too
+    servers:
+      mem1:
+        server: 127.0.0.1
+        port: 11211
+        # 'weight' is optional - defaults to 0
+        weight: 20
+      mem2:
+        server: 127.0.0.2
+        port: 11211
+        weight: 10
+    namespace: XtFramework_
+  # Memcache
+  memcache:
+    server: 127.0.0.1
+    port: 11211
+    namespace: XtFramework_
+  # Plain file cache (slowest) - never fails, just make sure cache dir
+  # is server readable/writeable (the dir is relative to project dir)
+  files:
+    dir: cache/files_cache
+  # eAccelerator cache (experimental. Removed in eAccelerator 0.9.6)
+  eaccelerator:
+    namespace: XtFramework_
+
+# Database configuration
+database:
+  # Axon
+  guestbook:
+    dsn: 'sqlite:./db/guestbook.sqlite'
+    sync: 0
+    options:
+      'PDO::MYSQL_ATTR_INIT_COMMAND': 'SET NAMES `utf8`'
+  # M2
+  guestbook_m2:
+    dsn: 'mongodb://localhost:27017/guestbook'
+  # DB wrapper
+  guestbook_mysql:
+    server: localhost
+    username: povilas
+    password: test
+  # Doctrine
+  blog:
+    dsn: 'mysql://user:pass@localhost/blog'
+
+# Locale (l10n / i18n) settings
+locale:
+  default: en_US
+
+# Session variables
+session:
+  # Always initialize session (if disabled, session is only initialized when accessed)
+  # If you use 'auto' or 'url' transport methods, this option has to be enabled for
+  # the framework to be able to transport sid using URL
+  always_initialize: true
+  # Session lifetime (172800 sec = 48 h)
+  lifetime: 172800
+  # Session id transport method: cookie, url or auto
+  transport: auto
+  # Session GET variable name (used if transport is 'url' or 'auto')
+  url_get: sessid
+  # Session cookie name (used if transport is 'cookie' or 'auto')
+  cookie: session
+  # Session cookie domain
+  domain:
+  # Reorder to prioritize different backends
+  backends:
+    # Memcached (needs libmemcached)
+    memcached:
+      server: 127.0.0.1
+      port: 11211
+    # Memcache
+    memcache:
+      server: 127.0.0.1
+      port: 11211
+    # Plain file session backend (slowest) - never fails, just make sure cache dir
+    # is server readable/writeable (the dir is relative to project dir)
+    files:
+      dir: cache/sessions
+    # eAccelerator (experimental. Removed in eAccelerator 0.9.6)
+    eaccelerator:
+
+environment:
+  detect:
+    skip_detection: .production_lock
+    dev:
+      - file: dev.php
+      # or
+      - client: 127.0.0.1
+      # or
+      - client: 192.168.1.100
+      # or
+      - client: 192.168.1.101
+        # and
+        server: dev.framework.dev
+    staging:
+      # alias to 'server'
+      - host: staging.framework.dev
+      # or environment variable is set
+      - env: staging_env
+      # or cookie is set and has a specific value
+      - cookie: secret_dev_cookie=secret_value
+
+  production:
+  staging:
+  dev:
+    error_reporting: E_ALL
+    verbose_errors: true
+    database.mongodb.profiler:
+      enabled: true
+      # Set up to only log slow queries (time in ms)
+      slow_log: 0
+      # Must not be used anywhere else - database name will be attached to the key
+      cache_log_key: X_xt_mongo_profiler_
+      # Log entry buffer length to keep - increase if some requests are not being logged
+      log_length: 20
+      # Number of seconds to cache log
+      log_timeout: 30
+  cli:
+    error_reporting: E_ALL
+    verbose_errors: true

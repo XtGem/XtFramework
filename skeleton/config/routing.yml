@@ -1,0 +1,40 @@
+# Fallback route if none match
+default: { controller: error, action: HTTP_404 }
+# Treat route URLs as case-sensitive
+case_sensitive: true
+# Remove query string (?arg=val) when parsing route
+# Must be disabled if session id is passed via URL ('url' or 'auto' transport method)
+parse_query: false
+# URL argument separator
+separator: /
+# URL extension (can be left empty to omit it)
+extension:
+
+routing:
+
+  '@user.*.*':
+    GET /*: { controller: user, action: [ greet, previous ] }
+
+  '*':
+    /: { controller: index }
+
+    /guestbook:
+      GET: { controller: guestbook, action: list_entries }
+      POST: { controller: guestbook, action: post }
+
+    /zend*: { controller: zend }
+
+    /blog: { controller: blog, action: list_posts }
+    /blog/tag/@tag: { controller: blog, action: list_posts }
+    /blog/post:
+      GET:  { controller: blog, action: post_form }
+      POST:  { controller: blog, action: post_form }
+
+    /sessions:
+      GET: { controller: sessions, action: read }
+      PUT: { controller: sessions, action: create }
+      POST: { controller: sessions, action: update }
+      DELETE: { controller: sessions, action: delete }
+
+    /xsrf: { controller: xsrf }
+    /xsrf/set: { controller: xsrf, action: set, route_name: xsrf_set, xsrf: true }

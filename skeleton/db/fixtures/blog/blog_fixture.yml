@@ -1,0 +1,58 @@
+blog_Author:
+  Povilas:
+    username: Povilas Musteikis
+    email: povilas@musteikis.com
+  Bong:
+    username: Bong Cosca
+    email: bong.cosca@yahoo.com
+  Mindaugas:
+    username: Mindaugas Vitkus
+    email: as@witkuz.com
+
+blog_Tag:
+  translation:
+    title: Translation
+  translations:
+    title: Translations
+  xtredo:
+    title: XtRedo
+  multilanguage:
+    title: Multilanguage
+  twitter:
+    title: Twitter
+  facebook:
+    title: Facebook
+
+blog_Post:
+  xtredo:
+    title: "Coming soon: An improved translation interface"
+    content: |
+                Now that we're reworking XtGem from ground-up, we're taking a more in-depth look at every feature that made the service so user-friendly and easy-to-use. One of the most important features we have is interface availability in multiple languages. Plenty of users currently have the privilege of being able to use XtGem in their native language.
+
+                All current translations were provided by volunteers - it's awesome to have such helpful and supportive community (thanks again, guys!). Unfortunately, current translation interface is very lacking. It does the job, but leaves a lot to be desired. Well, we have decided, that since multilingual interface is such an important feature for us and our users to have, we would spend a fair amount of effort trying to build a more convenient way for you guys to create and maintain site translations.
+
+                After spending the last couple of weeks planning, brainstorming, sketching and discussing, we came up with a solution. In addition to working on the next version of XtGem we're now also hard at work building a full-featured collaborative translation system that we named XtRedo.
+
+                In a nutshell:
+                XtRedo is a white-label universal translation panel. It encourages users both to collaborate and compete in providing the most accurate translation of an internationalization-enabled project.
+
+                The system will allow volunteers to work on translating XtGem (or other services - more on that later ;) ) into their native languages using a very slick and functional interface.
+
+                We plan to launch XtRedo along with the new version of XtGem. Keep reading the blog, follow us on Twitter and Facebook and find out the details before everybody else! ;)
+    Author: Povilas
+    Tags: [translation,translations,xtredo,multilanguage]
+  twitter1:
+    title: "Do you enjoy using XtGem?"
+    content: "Do you enjoy using XtGem? Join our Facebook page then! http://facebook.com/xtgem"
+    Author: Povilas
+    Tags: [twitter]
+  twitter2:
+    title: "Some users have embedded a malicious..."
+    content: "Some users have embedded a malicious JavaScript into their sites that redirect their visitors elsewhere. This is not XtGem's bug."
+    Author: Mindaugas
+    Tags: [twitter]
+  facebook:
+    title: "As fan page approaches the 10 000 fan..."
+    content: "As fan page approaches the 10 000 fan milestone I wanted to urge everybody to enter the ongoing competiton. Post something nice about XtGem and you might be one of three people that win money! More information here: http://wq.lt/tN4ng"
+    Author: Bong
+    Tags: [facebook]
