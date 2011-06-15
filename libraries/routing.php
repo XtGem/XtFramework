@@ -488,6 +488,10 @@ class X_routing
                     array_shift ( $args );
                 }
 
+                // Load separator setting from routing.yml if undefined (can happen in CLI environment)
+                if ( self::$routes == false )
+                    self::$routes = X_yaml::parse ( 'config/routing.yml' );
+
                 // Replace / into configured argument separators
                 $url = str_replace ( '/', self::$routes [ 'separator' ], $url );
 
