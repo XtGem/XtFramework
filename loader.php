@@ -33,7 +33,7 @@
  * @todo Auth
  */
 
-//if ( !defined ( 'XT_PROJECT_DIR' ) ) die ( 'Define XT_PROJECT_DIR constant in your bootstrap' );
+//if ( !defined ( 'XT_PROJECT_DIR' ) ) die ( 'Define XT_PROJECT_DIR constant in your bootstrap file' );
 
 // Global constant for tracking framework's directory
 define ( 'XT_FRAMEWORK_DIR', dirname ( __FILE__ ) );
@@ -55,8 +55,6 @@ include ( XT_FRAMEWORK_DIR .'/environment.php' );
 
 try
 {
-    ob_start ();
-
     #compiler skip start
     include ( XT_FRAMEWORK_DIR .'/libraries/framework.php' );
     #compiler skip end
@@ -71,10 +69,10 @@ try
     if ( X_view::get () !== false )
     {
         // Update the cached view if needed
-        X_view::compile ( X_view::get () );
+        X_view::compile ( X_view::template () .'/'. X_view::get () );
 
         // Run it!
-        include ( XT_VIEW_CACHE_DIR .'/'. X_view::get () );
+        include ( XT_VIEW_CACHE_DIR .'/'. X_view::template () .'/'. X_view::get () );
     }
 
     ob_end_flush ();

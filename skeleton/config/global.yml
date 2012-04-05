@@ -3,6 +3,13 @@ verbose_errors: false
 log_errors: true
 timezone: GMT
 
+zlib_compression:
+  enabled: true
+  # Default is 4KB
+  buffer_size: 4KB
+  # Default is -1, letting the server to decide on compression level
+  compression_level: -1
+
 view:
   # Default template to be executed
   template: web

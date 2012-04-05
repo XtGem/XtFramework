@@ -45,7 +45,14 @@ class error extends Exception
     {
         if ( is_array ( $message ) || is_object ( $message ) )
         {
-            $message = '<pre>' . htmlspecialchars ( print_r ( $message, 1 ) ) . '</pre>';
+            if ( PHP_SAPI == 'cli' )
+            {
+                $message = print_r ( $message, 1 );
+            }
+            else
+            {
+                $message = '<pre>' . htmlspecialchars ( print_r ( $message, 1 ) ) . '</pre>';
+            }
         }
         parent::__construct ( $message, $code );
     }
@@ -153,12 +160,39 @@ class error extends Exception
         $file = ( self::$errfile != null ? self::$errfile : $e -> getFile () );
         $line = ( self::$errline != null ? self::$errline : $e -> getLine () );
 
-        // Die if run via CLI
+        // Die if run via CLI, nevermind the fancy HTML
         if ( PHP_SAPI == 'cli' )
         {
-            die ( $e -> getMessage () ."\n\tin ".
+            echo "\033[1m". $e -> getMessage () ."\033[0m\n\tin ".
                         $file .' on line '.
-                        $line ."\n" );
+                        $line ."\n";
+            
+            if ( self::$verbose )
+            {
+                echo "\n". 'Trace:' . "\n";
+                $trace = $e -> getTrace ( );
+
+                foreach ( $trace as $t )
+                {
+                    if ( $t [ 'file' ] == null ) continue;
+                    
+                    if ( !self::$framework_traces )
+                    {
+                        // Skip framework stack traces
+                        if ( preg_match ( '#^'. preg_quote ( XT_FRAMEWORK_DIR ) .'/#', $t [ 'file' ] ) )
+                                continue;
+                    }
+
+                    $str = "\t". 
+                                 $t [ 'file' ] .':'. $t [ 'line' ] ."\n\t\t".
+                                 $t [ 'class' ] .' '. $t [ 'type' ] .' '.
+                                 $t [ 'function' ] .' ( '. implode ( ', ', $t [ 'args' ] ) .' ) '.
+                           "\n";
+                    echo $str;
+                }                
+            }
+            
+            die ();
         }
 
         // Log the message using system logger
@@ -188,12 +222,12 @@ class error extends Exception
             X_view::init ();
 
             // Check if template exists
-            if ( file_exists ( XT_VIEW_DIR .'/_error.php' ) )
+            if ( file_exists ( XT_VIEW_DIR .'/'. X_view::template () .'/_error.php' ) )
             {
                 // Update the cached view if needed
-                X_view::compile ( X_view::get () );
+                X_view::compile ( X_view::template () .'/'. X_view::get () );
                 // Run it!
-                include ( XT_VIEW_CACHE_DIR .'/'. X_view::get () );
+                include ( XT_VIEW_CACHE_DIR .'/'. X_view::template () .'/'. X_view::get () );
                 return;
             }
         }

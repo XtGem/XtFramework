@@ -46,12 +46,19 @@ class X
 
         // Read configuration
         X_config::read ();
+        
+        // Start output buffering
+        // @todo automatically flushing content chunks for progressive rendering?
+        ob_start ( 'X::ob_callback' );
 
         // Setup environment
         self::setup ();
 
         // Run CLI if appropriate
-        X_cli::init ();
+        if ( PHP_SAPI == 'cli' )
+        {
+            X_cli::init ();
+        }
 
         // Route
         if ( !self::is_set ( 'route' ) )
@@ -299,11 +306,11 @@ class X
         }
 
         // Load plugins
-        // Framework's plugin folder
-        self::load_plugin ( XT_FRAMEWORK_DIR .'/plugins', $class )
-                or
         // Project's plugin folder
-        self::load_plugin ( XT_PROJECT_DIR .'/plugins', $class );
+        self::load_plugin ( XT_PROJECT_DIR .'/plugins', $class )
+                or
+        // Framework's plugin folder
+        self::load_plugin ( XT_FRAMEWORK_DIR .'/plugins', $class );
     }
 
 
@@ -366,11 +373,44 @@ class X
     /**
      * Explicitly call all destructors so that any other registered shutdown
      * functions are called after destructors
+     * @static
      */
     public static function shutdown ()
     {
         foreach ( self::$controllers as &$obj ) unset ( $obj );
         foreach ( self::$models      as &$obj ) unset ( $obj );
+    }
+
+
+    /**
+     * Output buffering callback function
+     * @param string $buffer
+     * @return string
+     * @static
+     */
+    public static function ob_callback ( $buffer )
+    {
+        if ( self::is_set ( 'zlib_compression', 'enabled' ) &&
+             self::get ( 'zlib_compression', 'enabled' ) == 'true' )
+        {
+            if ( self::is_set ( 'zlib_compression', 'buffer_size' ) )
+            {
+                ini_set ( 'zlib.output_compression',
+                          self::get ( 'zlib_compression', 'buffer_size' ) );
+            }
+            else
+            {
+                ini_set ( 'zlib.output_compression', true );
+            }
+
+            if ( self::is_set ( 'zlib_compression', 'compression_level' ) )
+            {
+                ini_set ( 'zlib.output_compression_level',
+                          self::get ( 'zlib_compression', 'compression_level' ) );
+            }
+        }
+
+        return $buffer;
     }
 
 
@@ -414,7 +454,7 @@ class X
     public static function get ()
     {
         $var = self::$variables;
-        foreach ( func_get_args() as $arg )
+        foreach ( func_get_args () as $arg )
         {
             $var = $var [ $arg ];
         }
@@ -432,7 +472,7 @@ class X
     public static function &get_reference ()
     {
         $var = &self::$variables;
-        foreach ( func_get_args() as $arg )
+        foreach ( func_get_args () as $arg )
         {
             $var = &$var [ $arg ];
         }
@@ -450,7 +490,7 @@ class X
     public static function is_set ()
     {
         $var = self::$variables;
-        foreach ( func_get_args() as $arg )
+        foreach ( func_get_args () as $arg )
         {
             if ( !isset ( $var [ $arg ] ) ) return false;
             $var = $var [ $arg ];
@@ -469,7 +509,7 @@ class X
     public static function un_set ()
     {
         $elements = null;
-        foreach ( func_get_args() as $arg )
+        foreach ( func_get_args () as $arg )
         {
             $elements .= "['$arg']";
         }

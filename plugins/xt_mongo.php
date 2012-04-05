@@ -52,9 +52,14 @@ class xt_mongo extends MongoDB
             unset ( $config [ 'profiler' ] );
         }
 
+        $slave_ok = ( isset ( $config [ 'slaveOkay' ] ) && $config [ 'slaveOkay' ] == 'true' );
+        $slave_ok_force = ( !isset ( $config [ 'slaveOkay_force' ] ) || $config [ 'slaveOkay_force' ] == 'true' );
+        
         // Unset keys so that remaining array can be used as connection options
         unset ( $config [ 'dsn' ] );
         unset ( $config [ 'database' ] );
+        unset ( $config [ 'slaveOkay' ] );
+        unset ( $config [ 'slaveOkay_force' ] );
 
         try
         {
@@ -65,6 +70,16 @@ class xt_mongo extends MongoDB
             throw new error ( $e -> getMessage () );
         }
 
+        // Set slaveOkay state
+        if ( method_exists ( $this -> _connection, 'setSlaveOkay' ) )
+        {
+            $this -> _connection -> setSlaveOkay ( $slave_ok );
+        }
+        else if ( $slave_ok && $slave_ok_force )
+        {
+            throw new error ( 'Mongo configured with slaveOkay: true, but current PHP mongo library does not support per-connection slaveOkay. Update to >=1.1.0 or set slaveOkay_force: false' );
+        }
+        
         parent::__construct ( $this -> _connection, $this -> _db_name );
     }
 

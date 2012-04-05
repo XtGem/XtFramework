@@ -113,7 +113,9 @@ class session implements Iterator
                         $session_id,
                         time () + $session_config [ 'lifetime' ],
                         '/',
-                        $session_config [ 'domain' ] );
+                        $session_config [ 'domain' ],
+                        ( isset ( $session_config [ 'secure' ] ) ? $session_config [ 'secure' ] : false ),
+                        ( isset ( $session_config [ 'httponly' ] ) ? $session_config [ 'httponly' ] : false ) );
         }
 
         X::set ( 'framework', 'session_id', $session_id );

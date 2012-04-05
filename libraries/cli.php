@@ -99,8 +99,6 @@ class X_cli
      */
     public static function init ()
     {
-        if ( PHP_SAPI != 'cli' ) return;
-
         self::$usage = "\033[1;37mUsage:\n\t./cli \033[1;36m[action] \033[0;37m[arguments]\033[1;37m\n\n";
         foreach ( self::$actions as $action => $descr )
         {
@@ -244,6 +242,7 @@ class X_cli
         if ( $test != null && file_exists ( $file ) && !is_dir ( $file ) )
         {
             // Run a single file
+            // @todo fix for compatibility with php <5.3
             $scope = function () use ( $file ) { include ( $file ); };
             $scope ();
         }

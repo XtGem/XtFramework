@@ -158,7 +158,8 @@ class X_validation
             }
         }
 
-        // Make sure request array only contains form variables
+        // Make sure request array only contains form
+        // @todo strips get arguments from post method forms
         if ( isset ( self::$config [ 'forms' ] [ $form ] [ 'remove_undefined' ] ) &&
              self::$config [ 'forms' ] [ $form ] [ 'remove_undefined' ] == 'true' )
         {

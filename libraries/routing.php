@@ -91,6 +91,8 @@ class X_routing
      */
     private static function match_domain ( $domain )
     {
+        if ( !isset ( $_SERVER [ 'HTTP_HOST' ] ) ) return false;
+
         // Global namespace
         if ( $domain == '*' ) return true;
 

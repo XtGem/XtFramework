@@ -56,20 +56,21 @@ class X_view
             self::$template = $GLOBALS [ 'config' ] [ 'view' ] [ 'template' ];
         }
 
-        define ( 'XT_VIEW_DIR',
-                XT_PROJECT_DIR .'/views/'. self::$template );
-        define ( 'XT_VIEW_CACHE_DIR',
-                XT_PROJECT_DIR .'/cache/views/'. self::$template );
+        define ( 'XT_VIEW_DIR', XT_PROJECT_DIR .'/views' );
+        define ( 'XT_VIEW_CACHE_DIR', XT_PROJECT_DIR .'/cache/views' );
 
         // Check if _ajax or _error exists, revert to _layout otherwise
-        if ( ( self::$view == '_ajax.php' && !file_exists ( XT_VIEW_DIR .'/_ajax.php' ) ) ||
-             ( self::$view == '_error.php' && !file_exists ( XT_VIEW_DIR .'/_error.php' ) ) )
+        if ( ( self::$view == '_ajax.php' && !file_exists ( XT_VIEW_DIR .'/'. self::$template .'/_ajax.php' ) ) ||
+             ( self::$view == '_error.php' && !file_exists ( XT_VIEW_DIR .'/'. self::$template .'/_error.php' ) ) )
         {
             self::$view = '_layout.php';
         }
 
         // Check if cached view dir exists. If not, create it.
-        if ( !is_dir ( XT_VIEW_CACHE_DIR ) ) mkdir ( XT_VIEW_CACHE_DIR, 0777, true );
+        if ( !is_dir ( XT_VIEW_CACHE_DIR .'/'. self::$template ) ) 
+        {
+            mkdir ( XT_VIEW_CACHE_DIR .'/'. self::$template, 0777, true );
+        }
 
         // Tell the framework that it's now parsing views
         X::set ( 'framework', 'in_view', true );
@@ -136,7 +137,7 @@ class X_view
 
     /**
      * Parses the view PHP file and replaces all the shortcut notations into PHP code
-     * @param string $path View file to be parsed
+     * @param string $path View file to be parsed, prefixed by a template name
      */
     public static function compile ( $path )
     {
@@ -154,7 +155,7 @@ class X_view
 
             // Replace translation keys into translated values
             $contents = preg_replace_callback ( '#<(\s*[\'"].+?)>#',
-                            'self::translation_shortcut', $contents );
+                            'X_view::translation_shortcut', $contents );
 
             // Find the beginning of the first PHP code block
             $pos = strpos ( $contents, '<?' );
@@ -314,8 +315,37 @@ class X_view
 
     private static function func_component ( $args )
     {
-        $filename = $args .".'_view.php'";
-        return "X_view::compile(". $filename ."); include(XT_VIEW_CACHE_DIR.'/'.". $filename .")";
+        // @todo Fix this mess!
+        if ( strtolower ( substr ( ltrim ( $args, '\'" ' ), 0, 9 ) ) == 'template:' )
+        {
+            $filename = explode ( ':', $args, 2 );
+            $filename = $filename [ 1 ];
+            $pos = strpos ( $filename, '/' );
+            if ( $pos === false )
+            {
+                $template = '"'. rtrim ( $filename, '\'" ' ) .'"';
+                $filename = '\'_layout.php\'';
+            }
+            else
+            {
+                $template = substr ( $filename, 0, $pos );
+                $filename = rtrim ( substr ( $filename, $pos +1 ), '\'" ' );
+
+                if ( $filename == '_layout' || $filename == null ) $filename = '"_layout.php"';
+                elseif ( $filename == '_ajax' ) $filename = '"_ajax.php"';
+                elseif ( $filename == '_error' ) $filename = '"_error.php"';
+                else $filename = '"'. $filename ."\".'_view.php'";
+
+                $template = '"'. $template .'"';
+            }
+        }
+        else
+        {
+            $template = '\''. self::$template .'\'';
+            $filename = $args .".'_view.php'";
+        }
+
+        return "X_view::compile(". $template .".'/'.". $filename ."); include(XT_VIEW_CACHE_DIR.'/'.". $template .".'/'.". $filename .")";
     }
 
     private static function func_url ( $args )

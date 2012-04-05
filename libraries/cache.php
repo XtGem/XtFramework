@@ -206,6 +206,7 @@ class X_cache
         if ( !isset ( self::$key_index [ $key ] ) ) return false;
 
         $path = self::files_get_path ( $key );
+        if ( !file_exists ( $path ) ) return false;
 
         // Return cached content
         $contents = file_get_contents ( $path );
