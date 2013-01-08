@@ -75,7 +75,14 @@ try
         include ( XT_VIEW_CACHE_DIR .'/'. X_view::template () .'/'. X_view::get () );
     }
 
-    ob_end_flush ();
+    if ( X::is_set ( 'framework', 'ob_callback' ) && is_callable ( X::get ( 'framework', 'ob_callback' ) ) )
+    { 
+        echo call_user_func ( X::get ( 'framework', 'ob_callback' ), ob_get_clean () );
+    }
+    else
+    { 
+        ob_end_flush ();
+    }
 }
 catch ( error $exception )
 {

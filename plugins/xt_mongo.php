@@ -29,14 +29,14 @@ class xt_mongo extends MongoDB
 
     private $_enable_logging = false;
 
-    private $_connection = null,
-            $_db_name = null,
+    private $_db_name = null,
             $_database = null,
             $_profiler = null,
             $_collections = array ();
 
+    private static $_connections = array ();
 
-    public function __construct ( $database = 'mongo' )
+    public function __construct ( $database = 'mongo', $force_new_object = false )
     {
         $config = X::get ( 'config', 'database', $database );
 
@@ -61,26 +61,29 @@ class xt_mongo extends MongoDB
         unset ( $config [ 'slaveOkay' ] );
         unset ( $config [ 'slaveOkay_force' ] );
 
-        try
+        if ( !isset ( self::$_connections [ $database ] ) || !is_object ( self::$_connections [ $database ] ) || $force_new_object )
         {
-            $this -> _connection = new Mongo ( $dsn, $config );
-        }
-        catch ( MongoConnectionException $e )
-        {
-            throw new error ( $e -> getMessage () );
-        }
+            try
+            {
+                self::$_connections [ $database ] = new Mongo ( $dsn, $config );
+            }
+            catch ( MongoConnectionException $e )
+            {
+                throw new error ( $e -> getMessage () );
+            }
 
-        // Set slaveOkay state
-        if ( method_exists ( $this -> _connection, 'setSlaveOkay' ) )
-        {
-            $this -> _connection -> setSlaveOkay ( $slave_ok );
-        }
-        else if ( $slave_ok && $slave_ok_force )
-        {
-            throw new error ( 'Mongo configured with slaveOkay: true, but current PHP mongo library does not support per-connection slaveOkay. Update to >=1.1.0 or set slaveOkay_force: false' );
+            // Set slaveOkay state
+            if ( method_exists ( self::$_connections [ $database ], 'setSlaveOkay' ) )
+            {
+                self::$_connections [ $database ] -> setSlaveOkay ( $slave_ok );
+            }
+            else if ( $slave_ok && $slave_ok_force )
+            {
+                throw new error ( 'Mongo configured with slaveOkay: true, but current PHP mongo library does not support per-connection slaveOkay. Update to >=1.1.0 or set slaveOkay_force: false' );
+            }
         }
         
-        parent::__construct ( $this -> _connection, $this -> _db_name );
+        parent::__construct ( self::$_connections [ $database ], $this -> _db_name );
     }
 
 

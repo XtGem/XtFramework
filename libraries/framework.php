@@ -193,10 +193,11 @@ class X
     /**
      * Issue a HTTP redirect
      * @param string $url URL to redirect to
+     * @param integer $status HTTP status code to send to the browser. 301 = Moved Permanently; 302 = Found; 303 = See Other; 307 = Temporary redirect
      */
-    public static function redirect ( $url )
+    public static function redirect ( $url, $status = 302 )
     {
-        header ( 'location: '. $url );
+        header ( 'location: '. $url, true, $status );
         // Some older / buggy mobile browsers may not support 'location' HTTP header
         header ( 'refresh: 0;url='. $url );
         die ( '<html><head><meta http-equiv="refresh" content="0;url='. $url .'"></head></html>' );

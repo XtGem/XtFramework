@@ -315,7 +315,6 @@ class X_view
 
     private static function func_component ( $args )
     {
-        // @todo Fix this mess!
         if ( strtolower ( substr ( ltrim ( $args, '\'" ' ), 0, 9 ) ) == 'template:' )
         {
             $filename = explode ( ':', $args, 2 );
@@ -323,7 +322,7 @@ class X_view
             $pos = strpos ( $filename, '/' );
             if ( $pos === false )
             {
-                $template = '"'. rtrim ( $filename, '\'" ' ) .'"';
+                $template = rtrim ( $filename, '\'" ' );
                 $filename = '\'_layout.php\'';
             }
             else
@@ -336,16 +335,21 @@ class X_view
                 elseif ( $filename == '_error' ) $filename = '"_error.php"';
                 else $filename = '"'. $filename ."\".'_view.php'";
 
-                $template = '"'. $template .'"';
+                //$template = '"'. $template .'"';
             }
         }
         else
         {
-            $template = '\''. self::$template .'\'';
+            $template = self::$template;
             $filename = $args .".'_view.php'";
         }
 
-        return "X_view::compile(". $template .".'/'.". $filename ."); include(XT_VIEW_CACHE_DIR.'/'.". $template .".'/'.". $filename .")";
+        return ( isset ( $pos ) ? // Check if including component from another template
+                    'X::set(\'framework\',\'component_from_template\',\''. self::$template .'\');'.
+                    'X_view::template(\''. $template .'\');'
+                 : null ) . 
+                    "X_view::compile('". $template ."/'.". $filename ."); include(XT_VIEW_CACHE_DIR.'/". $template ."/'.". $filename .")" .
+               ( isset ( $pos ) ? ';X_view::template(X::get(\'framework\',\'component_from_template\'))' : null );
     }
 
     private static function func_url ( $args )

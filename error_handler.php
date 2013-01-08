@@ -198,9 +198,14 @@ class error extends Exception
         // Log the message using system logger
         if ( self::$error_log )
         {
+            $request_uri = ( isset ( $_SERVER [ 'REQUEST_METHOD' ] )    ? $_SERVER [ 'REQUEST_METHOD' ] : null ) .' '.
+                           ( isset ( $_SERVER [ 'HTTP_HOST' ] )         ? $_SERVER [ 'HTTP_HOST' ]      : null ) .
+                           ( isset ( $_SERVER [ 'REQUEST_URI' ] )       ? $_SERVER [ 'REQUEST_URI' ]    : null );
+            $request_uri = ltrim ( $request_uri );
+            if ( $request_uri != null ) $request_uri = ' ['. $request_uri .']';
             error_log ( $e -> getMessage () .' in '.
                         $file .' on line '.
-                        $line );
+                        $line . $request_uri );
         }
 
         self::silent ( true );
