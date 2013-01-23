@@ -33,14 +33,14 @@ class session implements Iterator
     private $namespace = null;
 
 
-    public function __construct ( $namespace = null, $forced_session_id = null )
+    public function __construct ( $namespace = null, $forced_session_id = null, $custom_config = array () )
     {
         $this -> namespace = $namespace;
 
         // Already initialized
         if ( X::is_set ( 'framework', 'session_backend' ) ) return;
 
-        $session_config = X::get ( 'config', 'session' );
+        $session_config = array_merge ( X::get ( 'config', 'session' ), $custom_config );
         
         foreach ( $session_config [ 'backends' ] as $backend => $config )
         {
