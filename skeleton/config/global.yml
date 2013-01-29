@@ -130,7 +130,7 @@ environment:
   production:
   staging:
   dev:
-    error_reporting: E_ALL
+    error_reporting: E_ALL & ~E_STRICT
     verbose_errors: true
     database.mongodb.profiler:
       enabled: true
@@ -143,5 +143,5 @@ environment:
       # Number of seconds to cache log
       log_timeout: 30
   cli:
-    error_reporting: E_ALL
+    error_reporting: E_ALL & ~E_STRICT
     verbose_errors: true
