@@ -36,8 +36,13 @@ class xt_mongo extends MongoDB
 
     private static $_connections = array ();
 
-    public function __construct ( $database = 'mongo', $force_new_object = false )
+    public function __construct ( $database = false, $force_new_object = false, $force_slave_mode = null )
     {
+        if ( !$database )
+        {
+            $database = X::is_set ( 'X_MONGO_MAIN_DATABASE' ) ? X::get ( 'X_MONGO_MAIN_DATABASE' ) : 'mongo';
+        }
+        
         $config = X::get ( 'config', 'database', $database );
 
         $dsn = $config [ 'dsn' ];
@@ -45,10 +50,14 @@ class xt_mongo extends MongoDB
         $this -> _database = $database;
 
         // Configure custom profiler
-        if ( isset ( $config [ 'profiler' ] ) && $config [ 'profiler' ] [ 'enabled' ] )
+        if ( isset ( $config [ 'profiler' ] ) )
         {
-            $this -> _enable_logging = true;
-            $this -> _profiler = $config [ 'profiler' ];
+            if ( $config [ 'profiler' ] [ 'enabled' ] )
+            {
+                $this -> _enable_logging = true;
+                $this -> _profiler = $config [ 'profiler' ];
+            }
+                
             unset ( $config [ 'profiler' ] );
         }
 
@@ -65,7 +74,16 @@ class xt_mongo extends MongoDB
         {
             try
             {
-                self::$_connections [ $database ] = new Mongo ( $dsn, $config );
+                if ( class_exists ( 'MongoClient' ) )
+                {
+                    // Persist option not supported in 1.3.smth+?
+                    unset ( $config [ 'persist' ] );
+                    self::$_connections [ $database ] = new MongoClient ( $dsn, $config );
+                }
+                else
+                {
+                    self::$_connections [ $database ] = new Mongo ( $dsn, $config );
+                }
             }
             catch ( MongoConnectionException $e )
             {
@@ -75,7 +93,14 @@ class xt_mongo extends MongoDB
             // Set slaveOkay state
             if ( method_exists ( self::$_connections [ $database ], 'setSlaveOkay' ) )
             {
-                self::$_connections [ $database ] -> setSlaveOkay ( $slave_ok );
+                if ( $force_slave_mode !== null )
+                {
+                    self::$_connections [ $database ] -> setSlaveOkay ( ( bool ) $force_slave_mode );
+                }
+                else
+                {
+                    self::$_connections [ $database ] -> setSlaveOkay ( $slave_ok );
+                }
             }
             else if ( $slave_ok && $slave_ok_force )
             {

@@ -92,7 +92,7 @@ class X
      */
     private static function setup ()
     {
-        error_reporting ( constant ( self::get ( 'config', 'error_reporting' ) ) );
+        error_reporting ( self::get ( 'config', 'error_reporting' ) );
         date_default_timezone_set ( self::get ( 'config', 'timezone' ) );
         error::verbose ( self::get ( 'config', 'verbose_errors' ) == 'true' ? true : false );
         if ( self::is_set ( 'config', 'log_errors' ) )

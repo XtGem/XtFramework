@@ -96,7 +96,7 @@ class xt_mongo_collection extends MongoCollection
         return $ret;
     }
 
-    public function ensureIndex ( $keys , $options = array () )
+    public function ensureIndex ( $keys, $options = array () )
     {
         $s = microtime ( true );
         $ret = parent::ensureIndex ( $keys, $options );

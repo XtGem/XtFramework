@@ -92,6 +92,10 @@ catch ( MongoException $exception )
 {
     error::show ( $exception );
 }
+catch ( MongoResultException $exception )
+{
+    error::show ( $exception );
+}
 catch ( MongoCursorException $exception )
 {
     error::show ( $exception );
