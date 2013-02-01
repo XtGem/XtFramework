@@ -92,9 +92,14 @@ class X
      */
     private static function setup ()
     {
-        error_reporting ( self::get ( 'config', 'error_reporting' ) );
+        $err_level = eval ( 'return '. self::get ( 'config', 'error_reporting' ) .';' );
+        error_reporting ( $err_level );
+        set_error_handler ( array ( 'error', 'php_error_handler' ), $err_level );
+        
         date_default_timezone_set ( self::get ( 'config', 'timezone' ) );
+        
         error::verbose ( self::get ( 'config', 'verbose_errors' ) == 'true' ? true : false );
+        
         if ( self::is_set ( 'config', 'log_errors' ) )
         {
             error::error_log ( self::get ( 'config', 'log_errors' ) == 'true' ? true : false );

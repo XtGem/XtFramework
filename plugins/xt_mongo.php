@@ -76,7 +76,7 @@ class xt_mongo extends MongoDB
             {
                 if ( class_exists ( 'MongoClient' ) )
                 {
-                    // Persist option not supported in 1.3.smth+?
+                    // Persist option not supported in 1.2+
                     unset ( $config [ 'persist' ] );
                     self::$_connections [ $database ] = new MongoClient ( $dsn, $config );
                 }
