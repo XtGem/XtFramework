@@ -57,7 +57,7 @@ class error extends Exception
         parent::__construct ( $message, $code );
     }
 
-    
+
     /**
      * Handle PHP errors
      * @param $errno
@@ -69,20 +69,20 @@ class error extends Exception
     {
         self::$errfile = $errfile;
         self::$errline = $errline;
-        
+
         if ( !self::$silent && error_reporting () )
         {
             if ( defined ( 'XT_PROJECT_DIR' ) && file_exists ( XT_PROJECT_DIR .'/error_handler.php' ) )
             {
                 if ( !class_exists ( '_error_handler' ) )
-                { 
+                {
                     include ( XT_PROJECT_DIR .'/error_handler.php' );
                 }
 
                 $obj = new _error_handler ();
 
                 if ( method_exists ( $obj, 'handle' ) )
-                { 
+                {
                     $obj -> handle ( $errno, $errstr, $errfile, $errline );
                 }
             }
@@ -99,7 +99,7 @@ class error extends Exception
      */
     public static function php_exception_handler ( $e )
     {
-        die ( $e -> getMessage ( ) );
+        self::show ( $e );
     }
 
 
@@ -166,7 +166,7 @@ class error extends Exception
             echo "\033[1m". $e -> getMessage () ."\033[0m\n\tin ".
                         $file .' on line '.
                         $line ."\n";
-            
+
             if ( self::$verbose )
             {
                 echo "\n". 'Trace:' . "\n";
@@ -175,7 +175,7 @@ class error extends Exception
                 foreach ( $trace as $t )
                 {
                     if ( $t [ 'file' ] == null ) continue;
-                    
+
                     if ( !self::$framework_traces )
                     {
                         // Skip framework stack traces
@@ -183,15 +183,15 @@ class error extends Exception
                                 continue;
                     }
 
-                    $str = "\t". 
+                    $str = "\t".
                                  $t [ 'file' ] .':'. $t [ 'line' ] ."\n\t\t".
                                  $t [ 'class' ] .' '. $t [ 'type' ] .' '.
                                  $t [ 'function' ] .' ( '. implode ( ', ', $t [ 'args' ] ) .' ) '.
                            "\n";
                     echo $str;
-                }                
+                }
             }
-            
+
             die ();
         }
 
@@ -362,7 +362,7 @@ class error extends Exception
                         $code = null;
                         foreach ( $code_dump as $l => $str )
                         {
-                            if ( $l != $line ) 
+                            if ( $l != $line )
                             {
                                 $code .= '<div>'. self::highlight ( $str ) ."</div>\n";
                             }
@@ -389,7 +389,7 @@ class error extends Exception
                 foreach ( $trace as $t )
                 {
                     if ( $t [ 'file' ] == null ) continue;
-                    
+
                     if ( !self::$framework_traces )
                     {
                         // Skip framework stack traces
@@ -425,7 +425,7 @@ class error extends Exception
         if ( strlen ( $code ) > 500 ) $code = substr ( $code, 0, 500 ) .'.....';
         $code = '<?php '. $code;
         $code = highlight_string ( $code, true );
-        $code = preg_replace ( '#^<code><span style="color: \#000000">\s*'. 
+        $code = preg_replace ( '#^<code><span style="color: \#000000">\s*'.
                                '<span style="color: \#0000BB">&lt;\?php&nbsp;'.
                                '(.+?)</span>(.*?)</span>\s*</code>#s', '\1\2',
                               $code );
